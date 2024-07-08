@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E5BA49BC-3667-43BF-8583-27D1D1B23DB0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MDTools</RootNamespace>
+    <AssemblyName>MDTools</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'WebForms Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WebForms Yui</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'WebForms Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;WebForms Yui</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Full Release|AnyCPU'">
+    <OutputPath>bin\Full Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\MDTools.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Test Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\MDTools.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test Release|AnyCPU'">
+    <OutputPath>bin\Test Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\MDTools.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+    <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WinForms Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\WinForms Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WinForms</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WinForms Release|AnyCPU'">
+    <OutputPath>bin\WinForms Release\</OutputPath>
+    <DefineConstants>TRACE;WinForms</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WebForms Debug FullTrust|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\WebForms Debug FullTrust\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WebForms Yui FullTrust</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WebForms Release FullTrust|AnyCPU'">
+    <OutputPath>bin\WebForms Release FullTrust\</OutputPath>
+    <DefineConstants>TRACE;WebForms Yui FullTrust</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WinForms Debug FullTrust|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\WinForms Debug FullTrust\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WinForms FullTrust</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'WinForms Release FullTrust|AnyCPU'">
+    <OutputPath>bin\WinForms Release FullTrust\</OutputPath>
+    <DefineConstants>TRACE;WinForms FullTrust</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test Debug FullTrust|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Test Debug FullTrust\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;FullTrust</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Test Release FullTrust|AnyCPU'">
+    <OutputPath>bin\Test Release FullTrust\</OutputPath>
+    <DefineConstants>TRACE;FullTrust</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Yahoo.Yui.Compressor">
+      <HintPath>Z:\Dev\downloads\minify\Yahoo.Yui.Compressor v2.2.0.0\Yahoo.Yui.Compressor.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collection\ArrayedDictionary.cs" />
+    <Compile Include="Collection\OrderedKeyList.cs" />
+    <Compile Include="Collection\ItemOrList.cs" />
+    <Compile Include="Collection\UniqueList.cs" />
+    <Compile Include="Config\DLWebConfig.cs" />
+    <Compile Include="Data\CloneCopy.cs" />
+    <Compile Include="Data\DataLayer2.cs" />
+    <Compile Include="Data\DataObj.cs" />
+    <Compile Include="Data\DBDataLayer.cs" />
+    <Compile Include="Data\DBHelper.cs" />
+    <Compile Include="Data\IntTypes.cs" />
+    <Compile Include="Data\KeyLocks.cs" />
+    <Compile Include="Data\MultimapBK.cs" />
+    <Compile Include="Data\DecisionTableVector64.cs" />
+    <Compile Include="Data\SqlHelper.cs" />
+    <Compile Include="Data\Table.cs" />
+    <Compile Include="Data\TimeZone.cs" />
+    <Compile Include="Data\UIDataBind.cs" />
+    <Compile Include="ErrorTrap.cs" />
+    <Compile Include="Exceptions.cs" />
+    <Compile Include="Extension\BaseExtensions.cs" />
+    <Compile Include="Extension\ControlExt.cs" />
+    <Compile Include="Extension\GenericCopyClone.cs" />
+    <Compile Include="Extension\JavascriptBuilder.cs" />
+    <Compile Include="Extension\DateTimeExtensions.cs" />
+    <Compile Include="Extension\GenericsAndArraysExt.cs" />
+    <Compile Include="Extension\PerformanceStrings.cs" />
+    <Compile Include="Extension\VariousExt.cs" />
+    <Compile Include="Forms\Timer.cs" />
+    <Compile Include="Image\ImageProc.cs" />
+    <Compile Include="IO\FileSystem.cs" />
+    <Compile Include="IO\TextLogging.cs" />
+    <Compile Include="Math\Base2to64.cs" />
+    <Compile Include="Math\Bits.cs" />
+    <Compile Include="Math\DateDefs.cs" />
+    <Compile Include="Math\BitFunctions.cs" />
+    <Compile Include="Math\Encryption.cs" />
+    <Compile Include="Web\ApiCallbacks\Messaging\NexmoHandler.cs" />
+    <Compile Include="Web\Api\Messaging\MandrillApi.cs" />
+    <Compile Include="Messaging\Messaging.cs" />
+    <Compile Include="Web\Api\Messaging\NexmoApi.cs" />
+    <Compile Include="Web\CompressFilter.cs" />
+    <Compile Include="Web\ContentTypes.cs" />
+    <Compile Include="Web\Controls\HtmlScript.cs" />
+    <Compile Include="Web\Controls\VersionAdapter.cs" />
+    <Compile Include="Web\Handlers\CacheHandler.cs" />
+    <Compile Include="Web\Handlers\HandlerHelper.cs" />
+    <Compile Include="Web\Controls\MinifyAdapter.cs" />
+    <Compile Include="Web\Handlers\ImageHandler.cs" />
+    <Compile Include="Web\Handlers\MinifyHandler.cs" />
+    <Compile Include="Web\Handlers\SiteMapHandler.cs" />
+    <Compile Include="Web\Handlers\SaveAsHandler.cs" />
+    <Compile Include="Web\ServerTools.cs" />
+    <Compile Include="Web\Cookie.cs" />
+    <Compile Include="Web\DLPage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Web\DynamicJson.cs" />
+    <Compile Include="Web\Errors.cs" />
+    <Compile Include="Web\Api\Social\FacebookAPI.cs" />
+    <Compile Include="Web\Api\Social\FacebookAuth.cs" />
+    <Compile Include="Web\FileLockSingleInstance.cs" />
+    <Compile Include="Web\ReturnUrlFlow.cs" />
+    <Compile Include="Web\Utils\GoogleSiteMap.cs" />
+    <Compile Include="Web\SessionExtension.cs" />
+    <Compile Include="Web\Utils\Jsmin.cs" />
+    <Compile Include="Web\Utils\Minify.cs" />
+    <Compile Include="Web\Utils\VersionParameter.cs" />
+    <Compile Include="Web\WebRetrieve.cs" />
+    <Compile Include="Web\JobMgr.cs" />
+    <Compile Include="Web\JSONObject.cs" />
+    <Compile Include="Web\Utils\MVCAttributeRequireNonSSL.cs" />
+    <Compile Include="Web\QuerySeq.cs" />
+    <Compile Include="Web\QuerySequence.cs" />
+    <Compile Include="Web\QueryString.cs" />
+    <Compile Include="Web\ClientServerCaches.cs" />
+    <Compile Include="Web\Utils\Scheduler.cs" />
+    <Compile Include="Web\Transfer.cs" />
+    <Compile Include="Web\Url.cs" />
+    <Compile Include="Web\UrlEncode.cs" />
+    <Compile Include="Web\UserHelper.cs" />
+    <Compile Include="Web\WebException.cs" />
+    <Compile Include="Web\WebUI.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\DataLayer.10.cs.exclude" />
+    <None Include="Data\DataLayer.22.cs.exclude" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

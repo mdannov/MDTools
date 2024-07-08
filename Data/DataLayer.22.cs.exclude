@@ -1,0 +1,823 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+//using System.Configuration;
+using System.Web.Caching;
+using System.Linq;
+using System.Web;
+using System.Data;
+
+/// The Classes in this file are created, owned and copyrighted by Michael Dannov 2009. 
+/// If you possess this file or it is part of your software library resources, you may
+/// need to verify with the author if you have been granted authorization and license to use. 
+namespace MDTools.Data {
+
+	public interface IDLParam {
+		string Key { get; }
+	}
+	public struct DLEMPTYIPARAMS : IDLParam {
+		public string Key { get { return null; } }
+	}
+
+	public interface IDLLoader {
+        void Load();
+    }
+	public interface IDLUpdater {
+		bool Update();	// return true if success
+	}
+	public interface IDLCreater {
+		CREATEDKEY Create<CREATEDKEY>();	// return key of inserted record
+	}
+	public interface IDLDeleter {
+		bool Delete();	// return true if success
+	}
+
+	public interface IDLScope {
+        object this[string name] { get; set; }
+        void Delete( string key );
+    }
+
+    public interface IDLExpirePolicy {
+        bool IsExpired();
+		void NotifyCreate();
+		void NotifyUpdate();
+		void NotifyDelete();
+	}
+
+	public delegate void dDLLoader();
+	public delegate bool dDLUpdate();
+	public delegate bool dDLDelete();
+	public delegate CREATEDKEY dDLCreate<CREATEDKEY>();
+
+#if legacy
+    public interface IDLDataCommand<DATA_OBJECT, PARAMETER_OBJECT> {
+        IDLExpirePolicy Policy { get; }
+        IDLLoader Loader { get; }
+		IDLCreater Creater { get; }
+		IDLUpdater Updater { get; }
+		IDLDeleter Deleter { get; }
+		PARAMETER_OBJECT Parameters { set; }
+		DATA_OBJECT Data { get; set;  }
+    }
+#endif
+
+	public interface IDLDataCommandLoad<DATA_OBJECT, PARAMETER_OBJECT> {
+		IDLExpirePolicy Policy { get; }
+		IDLLoader Loader { get; }
+		PARAMETER_OBJECT Parameters { set; }
+		DATA_OBJECT Data { get; set; }
+	}
+
+	public interface IDLDataCommandCreate<DATA_OBJECT, PARAMETER_OBJECT> {
+		IDLExpirePolicy Policy { get; }
+		IDLCreater Creater { get; }
+		PARAMETER_OBJECT Parameters { set; }
+		DATA_OBJECT Data { get; set; }
+	}
+	public interface IDLDataCommandUpdate<DATA_OBJECT, PARAMETER_OBJECT> {
+		IDLExpirePolicy Policy { get; }
+		IDLUpdater Updater { get; }
+		PARAMETER_OBJECT Parameters { set; }
+		DATA_OBJECT Data { get; set; }
+	}
+	public interface IDLDataCommandDelete<PARAMETER_OBJECT> {
+		IDLExpirePolicy Policy { get; }
+		IDLDeleter Deleter { get; }
+		PARAMETER_OBJECT Parameters { set; }
+	}
+
+	public static class DataLayerCommandLoader<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandLoad<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		#region Loader Methods - Data Required, Optional Parameters
+		/// <summary>
+		/// Load Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static DATA_OBJECT Get( string key, HttpContext context ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Load Keyed Data using Config - Auto-Scope - Provide Required Parameter Object
+		/// </summary>
+		public static DATA_OBJECT Get( string key, HttpContext context, PARAMETER_OBJECT Params, bool Initialize ) {
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Load Keyed Data using provided scope - Class does not require Parameter 
+		/// </summary>
+		public static DATA_OBJECT Get( string key, IDLScope scope, bool Initialize ) {
+			return Get( key, scope, default(PARAMETER_OBJECT), Initialize );
+		}
+		/// <summary>
+		/// Load Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static DATA_OBJECT Get( string key, IDLScope scope, PARAMETER_OBJECT Params, bool Initialize ) {
+			IDLLoader load;
+			// Retrieve data if it already exists
+			DL_WRAPPER dldata = ( scope != null ) ? (DL_WRAPPER)scope[key] : default(DL_WRAPPER);
+			if( dldata == null ) {
+				dldata = new DL_WRAPPER();
+				dldata.Parameters = Params;
+				// If data doesn't exist, load it from a loader if provided
+				load = dldata.Loader;
+				if( load == null ) {
+					if( !Initialize )
+						return default( DL_WRAPPER ).Data;
+					;
+				} else {
+					load.Load();
+				}
+			} else {
+				// Data existed, but if an expiration policy exists, check it
+				IDLExpirePolicy policy = dldata.Policy;
+				if( policy != null ) {
+					if( policy.IsExpired() ) {
+						// Clear the data and attempt to load if possible
+						if(scope!=null)
+							scope.Delete( key );
+						load = dldata.Loader;
+						dldata = default( DL_WRAPPER );
+						if( load == null ) {
+							if( Initialize ) {
+								dldata = new DL_WRAPPER();
+								dldata.Parameters = Params;
+							} else
+								return dldata.Data;//null
+						} else {
+							load.Load();
+						}
+					}
+				}
+			}
+			// Data could not be loaded, so return null
+			if( dldata == null ) {
+				if( Initialize ) {
+					dldata = new DL_WRAPPER();
+					dldata.Parameters = Params;
+				} else
+					return default( DL_WRAPPER ).Data;
+			}
+			// Set the data to the appropriate scope
+			if(scope!=null)
+				scope[key] = dldata.Data;
+			return dldata.Data;
+		}
+		#endregion
+	}
+
+	public static class DataLayerCommandCreate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandCreate<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		#region Create Methods - Data Required, Parameter Optional
+		/// <summary>
+		/// Create Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, HttpContext context, DATA_OBJECT data ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Create Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Create Keyed Data using provided scope - Class does not require Parameter 
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, IDLScope scope, DATA_OBJECT data ) {
+			return Create<CREATEDKEY>( key, scope, data, default(PARAMETER_OBJECT) );
+		}
+		/// <summary>
+		/// Create Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			CREATEDKEY retkey = dldata.Creater.Create<CREATEDKEY>();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyCreate();
+			return retkey;
+		}
+		#endregion
+	}
+
+	public static class DataLayerCommandUpdate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandUpdate<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		#region Update Methods - Data Required, Parameter Required
+		/// <summary>
+		/// Update Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static bool Update( string key, HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Update Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static bool Update( string key, IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			bool bRes = dldata.Updater.Update();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyUpdate();
+			return bRes;
+		}
+#if othernamedfunctions
+		public static bool Update( string key, IDLScope scope, dUpdate UpdateFn, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			bool bRes = UpdateFn();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyUpdate();
+			return bRes;
+		}
+#endif
+		#endregion
+	}
+
+	public static class DataLayerCommandDelete<DL_WRAPPER, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandDelete<PARAMETER_OBJECT>, new() {
+
+		#region Delete Methods - Parameter Required
+		/// <summary>
+		/// Delete Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static bool Delete( string key, HttpContext context, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Delete Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static bool Delete( string key, IDLScope scope, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Parameters = Params;
+			bool bRes = dldata.Deleter.Delete();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyDelete();
+			return bRes;
+		}
+		#endregion
+	}
+
+	public abstract class DLDataCommandLoad<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT> : IDLDataCommandLoad<DATA_OBJECT, PARAMETER_OBJECT>
+		where DATA_OBJECT : new()
+		where DL_WRAPPER : IDLDataCommandLoad<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		protected PARAMETER_OBJECT param = default( PARAMETER_OBJECT );
+		protected DATA_OBJECT data = new DATA_OBJECT();
+
+		#region IDLData properties - Default functions are not implemented - derived classes only need to implement those required
+		public virtual IDLExpirePolicy Policy { get { return null; } }	// not implemented
+		public abstract IDLLoader Loader { get; }
+		public PARAMETER_OBJECT Parameters { set { param = value; } }
+		public DATA_OBJECT Data { get { return data; } set { data = value; } }
+		#endregion
+
+		/// <summary>
+		/// Default Key - should be overriden by caller
+		/// </summary>
+		public static string Key { get { return typeof( DL_WRAPPER ).ToString(); } }
+
+		#region Loader Methods
+		public static DATA_OBJECT GetData( IDLScope scope, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandLoader<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, scope, param, true ) );
+		}
+		public static DATA_OBJECT GetData( IDLScope scope ) {
+			return (DATA_OBJECT)( scope[Key] );
+		}
+		public static DATA_OBJECT GetData( HttpContext context, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandLoader<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, new DLPageScope( context ), param, true ) );
+			//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, context, param, true ) );
+		}
+		public static DATA_OBJECT GetData( HttpContext context ) {
+			return (DATA_OBJECT)( new DLPageScope( context )[Key] );
+			//			return (DATA_OBJECT)(new DLAutoScope(context)[Key]);
+		}
+		#endregion
+	}
+
+	public abstract class DLDataCommandCreate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT> : IDLDataCommandCreate<DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandCreate<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		protected PARAMETER_OBJECT param = default( PARAMETER_OBJECT );
+		protected DATA_OBJECT data = default(DATA_OBJECT);
+
+		#region IDLData properties - Default functions are not implemented - derived classes only need to implement those required
+		public virtual IDLExpirePolicy Policy { get { return null; } }	// not implemented
+		public abstract IDLCreater Creater { get; }
+		public PARAMETER_OBJECT Parameters { set { param = value; } }
+		public DATA_OBJECT Data { get { return data; } set { data = value; } }
+		#endregion
+
+		/// <summary>
+		/// Default Key - should be overriden by caller
+		/// </summary>
+		public static string Key { get { return typeof( DL_WRAPPER ).ToString(); } }
+
+		#region Create Methods
+		public static CREATEDKEY CreateData<CREATEDKEY>( IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandCreate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, scope, data, param ) );
+		}
+		public static CREATEDKEY CreateData<CREATEDKEY>( HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandCreate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, new DLPageScope( context ), data, param ) );
+			//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, context, data, param ) );
+		}
+		#endregion
+	}
+
+	public abstract class DLDataCommandUpdate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT> : IDLDataCommandUpdate<DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandUpdate<DATA_OBJECT, PARAMETER_OBJECT>, new() {
+
+		protected PARAMETER_OBJECT param = default( PARAMETER_OBJECT );
+		protected DATA_OBJECT data = default( DATA_OBJECT );
+
+		#region IDLData properties - Default functions are not implemented - derived classes only need to implement those required
+		public virtual IDLExpirePolicy Policy { get { return null; } }	// not implemented
+		public abstract IDLUpdater Updater { get; }
+		public PARAMETER_OBJECT Parameters { set { param = value; } }
+		public DATA_OBJECT Data { get { return data; } set { data = value; } }
+		#endregion
+
+		/// <summary>
+		/// Default Key - should be overriden by caller
+		/// </summary>
+		public static string Key { get { return typeof( DL_WRAPPER ).ToString(); } }
+
+		#region Update Methods
+		public static bool UpdateData( IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandUpdate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, scope, data, param ) );
+		}
+		public static bool UpdateData( HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandUpdate<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, new DLPageScope( context ), data, param ) );
+			//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, context, data, param ) );
+		}
+#if othernamedfunctions
+		public static bool UpdateData( HttpContext context, dUpdate UpdateFn, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, new DLPageScope( context ), UpdateFn, data, param ) );
+		}
+#endif
+		#endregion
+	}
+
+	public abstract class DLDataCommandDelete<DL_WRAPPER, PARAMETER_OBJECT> : IDLDataCommandDelete<PARAMETER_OBJECT>
+		where DL_WRAPPER : IDLDataCommandDelete<PARAMETER_OBJECT>, new() {
+
+		protected PARAMETER_OBJECT param = default( PARAMETER_OBJECT );
+
+		#region IDLData properties - Default functions are not implemented - derived classes only need to implement those required
+		public virtual IDLExpirePolicy Policy { get { return null; } }	// not implemented
+		public abstract IDLDeleter Deleter { get; }
+		public PARAMETER_OBJECT Parameters { set { param = value; } }
+		#endregion
+
+		/// <summary>
+		/// Default Key - should be overriden by caller
+		/// </summary>
+		public static string Key { get { return typeof( DL_WRAPPER ).ToString(); } }
+
+		#region Delete Methods
+		public static bool DeleteData( IDLScope scope, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandDelete<DL_WRAPPER, PARAMETER_OBJECT>.Delete( Key, scope, param ) );
+		}
+		public static bool DeleteData( HttpContext context, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommandDelete<DL_WRAPPER, PARAMETER_OBJECT>.Delete( Key, new DLPageScope( context ), param ) );
+			//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Delete( Key, context, param ) );
+		}
+		#endregion
+	}
+
+
+#if legacy
+	public static class DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>
+		where DL_WRAPPER :
+			IDLDataCommand<DATA_OBJECT, PARAMETER_OBJECT>, new()
+		where PARAMETER_OBJECT : new() {
+
+		#region Loader Methods - Data Required, Optional Parameters
+		/// <summary>
+		/// Load Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static DATA_OBJECT Get( string key, HttpContext context ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Load Keyed Data using Config - Auto-Scope - Provide Required Parameter Object
+		/// </summary>
+		public static DATA_OBJECT Get( string key, HttpContext context, PARAMETER_OBJECT Params, bool Initialize ) {
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Load Keyed Data using provided scope - Class does not require Parameter 
+		/// </summary>
+		public static DATA_OBJECT Get( string key, IDLScope scope, bool Initialize ) {
+			return Get( key, scope, new PARAMETER_OBJECT(), Initialize );
+		}
+		/// <summary>
+		/// Load Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static DATA_OBJECT Get( string key, IDLScope scope, PARAMETER_OBJECT Params, bool Initialize ) {
+			IDLLoader load;
+			// Retrieve data if it already exists
+			DL_WRAPPER dldata = (DL_WRAPPER)scope[key];
+			if( dldata == null ) {
+				dldata = new DL_WRAPPER();
+				dldata.Parameters = Params;
+				// If data doesn't exist, load it from a loader if provided
+				load = dldata.Loader;
+				if( load == null ) {
+					if( !Initialize )
+						return default( DL_WRAPPER ).Data;
+					;
+				} else {
+					load.Load();
+				}
+			} else {
+				// Data existed, but if an expiration policy exists, check it
+				IDLExpirePolicy policy = dldata.Policy;
+				if( policy != null ) {
+					if( policy.IsExpired() ) {
+						// Clear the data and attempt to load if possible
+						scope.Delete( key );
+						load = dldata.Loader;
+						dldata = default( DL_WRAPPER );
+						if( load == null ) {
+							if( Initialize ) {
+								dldata = new DL_WRAPPER();
+								dldata.Parameters = Params;
+							} else
+								return dldata.Data;//null
+						} else {
+							load.Load();
+						}
+					}
+				}
+			}
+			// Data could not be loaded, so return null
+			if( dldata == null ) {
+				if( Initialize ) {
+					dldata = new DL_WRAPPER();
+					dldata.Parameters = Params;
+				} else
+					return default( DL_WRAPPER ).Data;
+			}
+			// Set the data to the appropriate scope
+			scope[key] = dldata.Data;
+			return dldata.Data;
+		}
+		#endregion
+
+		#region Create Methods - Data Required, Parameter Optional
+		/// <summary>
+		/// Create Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, HttpContext context, DATA_OBJECT data ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Create Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Create Keyed Data using provided scope - Class does not require Parameter 
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, IDLScope scope, DATA_OBJECT data ) {
+			return Create<CREATEDKEY>( key, scope, data, new PARAMETER_OBJECT() );
+		}
+		/// <summary>
+		/// Create Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static CREATEDKEY Create<CREATEDKEY>( string key, IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			CREATEDKEY retkey = dldata.Creater.Create<CREATEDKEY>();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyCreate();
+			return retkey;
+		}
+		#endregion
+
+		#region Update Methods - Data Required, Parameter Required
+		/// <summary>
+		/// Update Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static bool Update( string key, HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Update Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static bool Update( string key, IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			bool bRes = dldata.Updater.Update();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyUpdate();
+			return bRes;
+		}
+#if othernamedfunctions
+		public static bool Update( string key, IDLScope scope, dUpdate UpdateFn, DATA_OBJECT data, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Data = data;
+			dldata.Parameters = Params;
+			bool bRes = UpdateFn();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyUpdate();
+			return bRes;
+		}
+#endif
+		#endregion
+
+		#region Delete Methods - Parameter Required
+		/// <summary>
+		/// Delete Keyed Data using Config - Auto-Scope
+		/// </summary>
+		public static bool Delete( string key, HttpContext context, PARAMETER_OBJECT Params ) {
+			// Implement web.config loader
+			throw new NotImplementedException();
+		}
+		/// <summary>
+		/// Delete Keyed Data using provided scope - Provide Required Parameter Object
+		/// </summary>
+		public static bool Delete( string key, IDLScope scope, PARAMETER_OBJECT Params ) {
+			DL_WRAPPER dldata = new DL_WRAPPER();
+			dldata.Parameters = Params;
+			bool bRes = dldata.Deleter.Delete();
+			if( dldata.Policy != null )
+				dldata.Policy.NotifyDelete();
+			return bRes;
+		}
+		#endregion
+
+	}
+#endif
+
+#if legacy
+	public abstract class DLDataCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT> : IDLDataCommand<DATA_OBJECT, PARAMETER_OBJECT>
+		where DATA_OBJECT : new()
+		where DL_WRAPPER : IDLDataCommand<DATA_OBJECT, PARAMETER_OBJECT>, new()
+		where PARAMETER_OBJECT : new() {
+
+		protected PARAMETER_OBJECT param = default( PARAMETER_OBJECT );
+		protected DATA_OBJECT data = new DATA_OBJECT();
+
+		#region IDLData properties - Default functions are not implemented - derived classes only need to implement those required 
+		public virtual IDLExpirePolicy Policy { get { return null; } }	// not implemented
+		public virtual IDLLoader Loader { get { return null; } }	// not implemented
+		public virtual IDLCreater Creater { get { return null; } }	// not implemented
+		public virtual IDLUpdater Updater { get { return null; } }	// not implemented
+		public virtual IDLDeleter Deleter { get { return null; } }	// not implemented
+
+		public PARAMETER_OBJECT Parameters { set { param = value; } }
+		public DATA_OBJECT Data { get { return data; } set { data = value; } }
+		#endregion
+
+		/// <summary>
+		/// Default Key - should be overriden by caller
+		/// </summary>
+		public static string Key { get { return typeof(DL_WRAPPER).ToString(); } }
+
+		#region Loader Methods
+		public static DATA_OBJECT GetData( IDLScope scope, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, scope, param, true ) );
+		}
+		public static DATA_OBJECT GetData( IDLScope scope ) {
+			return (DATA_OBJECT)( scope [Key]);
+		}
+		public static DATA_OBJECT GetData( HttpContext context, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, new DLPageScope(context), param, true ) );
+//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Get( Key, context, param, true ) );
+		}
+		public static DATA_OBJECT GetData( HttpContext context ) {
+			return (DATA_OBJECT)( new DLPageScope( context )[Key] );
+//			return (DATA_OBJECT)(new DLAutoScope(context)[Key]);
+		}
+		#endregion
+
+		#region Create Methods
+		public static CREATEDKEY CreateData<CREATEDKEY>( IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, scope, data, param ) );
+		}
+		public static CREATEDKEY CreateData<CREATEDKEY>( HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, new DLPageScope(context), data, param ) );
+//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Create<CREATEDKEY>( Key, context, data, param ) );
+		}
+		#endregion
+
+		#region Update Methods
+		public static bool UpdateData( IDLScope scope, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, scope, data, param ) );
+		}
+		public static bool UpdateData( HttpContext context, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, new DLPageScope(context), data, param ) );
+//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, context, data, param ) );
+		}
+		#if othernamedfunctions
+		public static bool UpdateData( HttpContext context, dUpdate UpdateFn, DATA_OBJECT data, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Update( Key, new DLPageScope( context ), UpdateFn, data, param ) );
+		}
+		#endif
+		#endregion
+
+		#region Delete Methods
+		public static bool DeleteData( IDLScope scope, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Delete( Key, scope, param ) );
+		}
+		public static bool DeleteData( HttpContext context, PARAMETER_OBJECT param ) {
+			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Delete( Key, new DLPageScope(context), param ) );
+//			return ( DataLayerCommand<DL_WRAPPER, DATA_OBJECT, PARAMETER_OBJECT>.Delete( Key, context, param ) );
+		}
+		#endregion
+
+	}
+#endif
+
+	/// <summary>
+	/// Local scope does not serialize or cache in any way
+	/// </summary>
+	public class DLLocalScope : IDLScope {
+		protected Dictionary<string, object> D = new Dictionary<string,object>();
+		public DLLocalScope( ) { }
+		public DLLocalScope( HttpContext context ) { }
+		public object this[string key] { get { return D[key]; } set { D[key] = value; } }
+		public void Delete( string key ) { D.Remove( key ); }
+	}
+    public class DLPageScope : IDLScope {
+        protected IDictionary D = null;
+        public DLPageScope( HttpContext context ) { D = context.Items; }
+        public object this[string key] { get { return D[key]; } set { D[key] = value; } }
+        public void Delete( string key ) { D.Remove( key ); }
+    }
+    /*    public class DLPageScope<T> : IDLScope {
+            protected IDictionary D = null;
+            public DLPageScope( System.Web.HttpContext context ) { D = context.Items; }
+            public T this[string key] { get { return (T)D[key]; } }
+        }*/
+    public class DLSessionScope : IDLScope {
+        protected System.Web.SessionState.HttpSessionState D = null;
+        public DLSessionScope( HttpContext context ) { D = context.Session; }
+        public DLSessionScope( System.Web.SessionState.HttpSessionState session ) { D = session; }
+        public object this[string key] { get { return D[key]; } set { D[key] = value; } }
+        public void Delete( string key ) { D.Remove( key ); }
+    }
+    /*    public class DLSessionScope<T> : IDLScope {
+            protected System.Web.SessionState.HttpSessionState D = null;
+            public DLSessionScope( System.Web.HttpContext context ) { D = context.Session; }
+            public DLSessionScope( System.Web.SessionState.HttpSessionState session ) { D = session; }
+            public T this[string key] { get { return (T)D[key]; } }
+        }*/
+#if MediumTrust
+    public class DLCacheScope : IDLScope {
+        protected System.Web.Caching.Cache D = null;
+        public DLCacheScope( HttpContext context ) { D = context.Cache; }
+        public DLCacheScope( System.Web.Caching.Cache cache ) { D = cache; }
+        public object this[string key] { get { return D[key]; } set { D[key] = value; }}
+        public void Delete( string key ) { D.Remove( key ); }
+    }
+    /*    public class DLCacheScope<T> : IDLScope where T : new() {
+            protected System.Web.Caching.Cache D = null;
+            public DLCacheScope( System.Web.HttpContext context ) { D = context.Cache; }
+            public DLCacheScope( System.Web.Caching.Cache cache ) { D = cache; }
+            public T this[string key] { get { return (T)D[key]; } }
+        }*/
+#endif
+	//!! Implement this in another file
+	public class DLAutoScope : IDLScope {
+		public DLAutoScope( HttpContext context ) { }
+		public object this[string key] { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
+		public void Delete( string key ) { throw new NotImplementedException(); }
+	}
+
+
+	public class DLExpirePolicyCollection : IDLExpirePolicy {
+        public List<IDLExpirePolicy> Policies = new List<IDLExpirePolicy>();
+		public DLExpirePolicyCollection( params IDLExpirePolicy[] list ) { Policies.AddRange( list ); }
+		public void Add( IDLExpirePolicy policy ) {
+			Policies.Add( policy );
+		}
+        public bool IsExpired() {
+			for( int i = 0, len = Policies.Count; i < len; i++ )
+				if( Policies[i].IsExpired() )
+					return true;
+            return false;
+        }
+		public void NotifyCreate() {}
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+
+    public class DLDateTimeExpirePolicy : IDLExpirePolicy {
+        public DateTime AbsoluteExpiration;// = Cache.NoAbsoluteExpiration;
+        public DLDateTimeExpirePolicy( DateTime time ) { AbsoluteExpiration = time; }
+        public bool IsExpired() {
+            if( DateTime.Now >= AbsoluteExpiration ) {
+                AbsoluteExpiration = DateTime.MaxValue;
+                return true;
+            }
+            return false;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+    public class DLTimeSpanExpirePolicy : IDLExpirePolicy {
+        public TimeSpan SlidingExpiration;// = Cache.NoSlidingExpiration;
+        public DateTime NextExpire = DateTime.Now;
+        public DLTimeSpanExpirePolicy( TimeSpan span ) { SlidingExpiration = span; }
+        public bool IsExpired() {
+            DateTime now = DateTime.Now;
+            if( now >= NextExpire ) {
+                NextExpire = DateTime.MinValue;
+                return true;
+            }
+            NextExpire = now + SlidingExpiration;
+            return false;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+    public class DLFileUpdateExpirePolicy : IDLExpirePolicy {
+        public string FileName;
+        public DLFileUpdateExpirePolicy( string file ) { FileName = file; }
+        public bool IsExpired() {
+            //!! need to implement
+            return false;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+    public class DLLocalKeyExpirePolicy : IDLExpirePolicy {
+        public string Key;
+        public DLLocalKeyExpirePolicy( string key ) { Key = key; }
+        public bool IsExpired() {
+            //!! need to implement
+            return false;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+
+    public class DLSharedKeyExpirePolicy<K> : IDLExpirePolicy {
+        public string Key;
+        public string DBProfile;
+        public StaticParams IParams = null;
+        public DLSharedKeyExpirePolicy( string dbProfile, string key, StaticParams pars ) { DBProfile = dbProfile; Key = key; IParams = pars; }
+        public bool IsExpired() {
+            //!! Reevaluate this implementation - compare to what? Should entire key be string? If no value, set value?
+            bool isExpired = false;
+            using( DBHelper dbh = new DBHelper( DBProfile ) ) {
+                using (IDataReader r = dbh.GetDataReader("spIsExpired", DBHelper.SqlParameter("Key", Key) ) ) {
+                    if( r.Read() ) {
+                        DateTime date = r.GetDateTime( 0 );
+                    }
+                    r.Close();
+                }
+            }
+            return isExpired;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+    public class DLDBExpirePolicy : IDLExpirePolicy {
+        public string DBKey;
+        public DLDBExpirePolicy( string dbKey ) { DBKey = dbKey; }
+        public bool IsExpired() {
+            //!! need to implement
+            return false;
+        }
+		public void NotifyCreate() { }
+		public void NotifyUpdate() { }
+		public void NotifyDelete() { }
+	}
+
+/*	public struct DLString {
+		string str;
+
+//		public DLString() { str = string.Empty; }
+		public DLString( string val ) { str = val; }
+		public override string ToString() { return str; }
+		public static explicit operator string( DLString s ) { return s.str; }
+		public static explicit operator DLString( string str ) { return new DLString(str); }
+
+	}*/
+
+}

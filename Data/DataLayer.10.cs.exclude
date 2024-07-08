@@ -1,0 +1,491 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Web;
+using System.Web.Caching;
+using System.Linq;
+//using MDTools.Config;
+
+namespace MDTools.Data {
+
+    public interface IDLData {
+        /// <summary>
+        /// Return a String from the DataLayer; if it does not exist, returns null
+        /// </summary>
+        string String( string name );
+        /// <summary>
+        /// Return a String from the DataLayer; if it does not exist, stores and returns the default value
+        /// </summary>
+        string String( string name, string defaultValue );
+        /// <summary>
+        /// Return an Object from the DataLayer; if it does not exist, returns null
+        /// </summary>
+        Object Data( string name );
+        /// <summary>
+        /// Return a templated object from the DataLayer; if it does not exist, it allocates, stores and returns it
+        /// </summary>
+        T Data<T>( string name ) where T : new();
+        /// <summary>
+        /// Return an interface IDataObj from the DataLayer; if it does not exist, returns null
+        /// </summary>
+        IDataObj DataObj( string name );
+        /// <summary>
+        /// get = returns the object from the DataLayer; if it does not exist, returns null
+        /// set = sets the named DataLayer to this object; if one already exists, it is replaced
+        /// </summary>
+//        Object this[string name] { get; set; }
+        /// <summary>
+        /// Set = sets the named DataLayer to this object; if one already exists, it is replaced
+        /// </summary>
+//        void Set( string name, Object val );
+        /// <summary>
+        /// Clears the named DataLayer and if it supports dependants, those too
+        /// </summary>
+//        void Expire( string name );
+    }
+
+    [Serializable]
+    public class PageData : IDLData {
+        private IDictionary D = null;
+
+        public PageData( HttpContext context ) { D = context.Items; }
+        public PageData( IDictionary dict ) { D = dict; }
+
+        public string String( string name ) { return (string) D[name]; }
+        public string String( string name, string defaultValue ) {
+            object o = this.D[name];
+            if( o == null ) {
+                o = D[name] = defaultValue;
+                return defaultValue;
+            }
+            return (string) o;
+        }
+        public Object Data( string name ) { return D[name]; }
+        public Object this[string name] { get { return D[name]; } set { D[name] = value; } }
+        public T Data<T>( string name ) where T : new() {
+            object o = D[name];
+            if( o == null ) {
+                o = D[name] = new T();
+            }
+            return (T) o;
+        }
+        public IDataObj DataObj( string name ) { return (IDataObj) this.D[name]; }
+
+        #region Static Members
+        public static PageData Get( HttpContext context ) { return new PageData( context ); }
+        public static PageData Get( IDictionary dict ) { return new PageData( dict ); }
+
+        public static string GetString( HttpContext context, string name ) { return (string) context.Items[name]; }
+        public static string GetString( HttpContext context, string name, string defaultValue ) {
+            object o = context.Items[name];
+            if( o == null ) {
+                o = context.Items[name] = defaultValue;
+                return defaultValue;
+            }
+            return (string) o;
+        }
+        public static Object GetData( HttpContext context, string name ) { return context.Items[name]; }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() {
+            object o = context.Items[name];
+            if( o == null ) {
+                o = context.Items[name] = new T();
+            }
+            return (T) o;
+        }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return (IDataObj) context.Items[name]; }
+        #endregion
+    }
+
+    [Serializable]
+    public class SessionData : IDLData {
+
+        System.Web.SessionState.HttpSessionState D = null;
+
+        public SessionData( HttpContext context) { D = context.Session; }
+        public SessionData( System.Web.SessionState.HttpSessionState session ) { D = session; }
+
+        public string String( string name ) { return (string) D[name]; }
+        public string String( string name, string defaultValue ) {
+            object o = this.D[name];
+            if( o == null ) {
+                o = D[name] = defaultValue;
+                return defaultValue;
+            }
+            return (string) o;
+        }
+        public Object Data( string name ) { return this.D[name]; }
+        public Object this[string name] { get { return D[name]; } set { D[name] = value; } }
+        public T Data<T>( string name ) where T : new() {
+            object o = D[name];
+            if( o == null ) {
+                o = D[name] = new T();
+            }
+            return (T) o;
+        }
+        public IDataObj DataObj( string name ) { return (IDataObj) this.D[name]; }
+
+        #region Static Members
+        public static SessionData Get( HttpContext context ) { return new SessionData( context ); }
+        public static SessionData Get( System.Web.SessionState.HttpSessionState session ) { return new SessionData( session ); }
+        public static string GetString( HttpContext context, string name ) {
+            return (string) context.Session[name];
+        }
+        public static string GetString( HttpContext context, string name, string defaultValue ) {
+            object o = context.Session[name];
+            if( o == null ) {
+                o = context.Session[name] = defaultValue;
+                return defaultValue;
+            }
+            return (string) o;
+        }
+        public static Object GetData( HttpContext context, string name ) { return context.Session[name]; }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() {
+            object o = context.Session[name];
+            if( o == null )
+                o = context.Session[name] = new T();
+            return (T) o;
+        }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return (IDataObj) context.Session[name]; }
+        #endregion 
+    }
+
+
+    [Serializable]
+    public class CacheData : IDLData {
+        private Cache D = null;
+        public AggregateCacheDependency Dependencies = null;
+        public DateTime AbsoluteExpiration = Cache.NoAbsoluteExpiration;
+        public TimeSpan SlidingExpiration = Cache.NoSlidingExpiration;
+
+        public CacheData( HttpContext context ) { D = context.Cache; }
+        public CacheData( Cache cache ) { D = cache; }
+
+        public string String( string name ) { return (string) D[name]; }
+        public string String( string name, string defaultValue ) {
+            object o = this.D[name];
+            if( o == null ) {
+                o = defaultValue;
+                D.Insert( name, o, Dependencies,
+                    AbsoluteExpiration,
+                    SlidingExpiration,
+                    CacheItemPriority.Normal, null );
+            }
+            return (string) o;
+        }
+        public Object Data( string name ) { return D[name]; }
+        public Object this[string name] { 
+            get { return D[name]; }
+            set { Set(name, value); }
+        }
+        public void Set( string name, Object val ) {
+            object o = D[name];
+            if( o == null ) {
+                // Doesn't already exist, so create
+                D.Insert( name, val, Dependencies,
+                    AbsoluteExpiration,
+                    SlidingExpiration,
+                    CacheItemPriority.Normal, null );
+            } else {
+                // Replace
+                D[name] = val;
+            }
+        }
+        public T Data<T>( string name ) where T : new() {
+            object o = D[name];
+            if( o == null ) {
+                o = new T();
+                D.Insert( name, o, Dependencies,
+                AbsoluteExpiration,
+                SlidingExpiration,
+                CacheItemPriority.Normal, null );
+            }
+            return (T) o;
+        }
+        public IDataObj DataObj( string name ) { return (IDataObj) this.D[name]; }
+
+        #region Static Members
+        public static CacheData Get( Cache cache ) { return new CacheData( cache ); }
+        public static CacheData Get( HttpContext context ) { return new CacheData( context ); }
+        public static string GetString( HttpContext context, string name ) {
+            return (string) context.Cache[name];
+        }
+        public static string GetString( HttpContext context, string name, string defaultValue ) {
+            object o = context.Cache[name];
+            if( o == null ) {
+                o = context.Items[name] = defaultValue;
+                return defaultValue;
+            }
+            return (string) o;
+        }
+        public static Object GetData( HttpContext context, string name ) { return context.Cache[name]; }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() {
+            object o = context.Cache[name];
+            if( o == null ) {
+                o = context.Cache[name] = new T();
+            }
+            return (T) o;
+        }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return (IDataObj) context.Cache[name]; }
+        #endregion
+    }
+
+    /// <summary>
+    /// SesCacheData is a Alternate Session based DataLayer store that uses the cache sliding expiration
+    /// </summary>
+    [Serializable]
+    public class SesCacheData : IDLData {
+
+        public int Mins = 20; // Cache object will expire in 20 if not used
+        protected IDLData IDL = null;
+        protected string SessionID = null;
+        public SesCacheData( HttpContext context ) {
+            SessionID = context.Session.SessionID;
+            if( !string.IsNullOrEmpty( SessionID ) ) {
+                // SessionID available so instantiate this object as CacheData that expires after 20 mins.
+                CacheData xData = new CacheData( context );
+                xData.SlidingExpiration = new TimeSpan( 0, Mins, 0 );
+                IDL = xData;
+            } else {
+                // SessionID not available so we can only instantiate this object as PageData 
+                IDL = new PageData( context );
+            }
+        }
+        protected string _Name( string name ) {
+            // If PageData, return
+            if( string.IsNullOrEmpty( SessionID ) )
+                return name;
+            // If CacheData, attach SessionID to name so name is unique to session 
+            return name += SessionID;
+        }
+        public string String( string name ) { return IDL.String( _Name(name) ); }
+        public string String( string name, string defaultValue ) { return IDL.String( _Name( name ), defaultValue ); }
+        public Object Data( string name ) { return IDL.Data( _Name( name ) ); }
+        public Object this[string name] { get { return IDL.Data( _Name(name) ); } set {  } }
+        public T Data<T>(string name) where T : new() { return Data<T>(_Name(name)); }
+        public IDataObj DataObj( string name ) { return (IDataObj) IDL.DataObj( _Name( name ) ); }
+
+        #region Static Members
+        public static string GetString( HttpContext context, string name ) { return new SesCacheData( context ).String( name ); }
+        public static string GetString( HttpContext context, string name, string defaultValue ) { return new SesCacheData( context ).String( name, defaultValue ); }
+        public static Object GetData( HttpContext context, string name ) { return new SesCacheData( context ).Data( name ); }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() { return new SesCacheData( context ).Data<T>( name ); }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return new SesCacheData( context ).DataObj( name ); }
+        #endregion
+    }
+
+
+    [Serializable]
+    public class NamedData : IDLData {
+        protected HttpContext Context = null;
+        protected IDLData IDL = null;
+
+        public NamedData( HttpContext context ) { Context = context; }
+        public static NamedData Get( HttpContext context ) { return new NamedData( context ); }
+
+        protected void _CreateIDL( string name ) {
+            if(IDL!=null)
+                return;
+            if(string.IsNullOrEmpty(name))
+                throw new ArgumentNullException();
+            int pos = name[0] == '$' ? 1 : 0;
+            if(name[pos++]!='_')
+                throw new ArgumentException("PreserveData: Must use format $P_...");
+            switch( name[pos] ) {
+            case 'P':
+                IDL = new PageData( Context );
+                break;
+            case 'S':
+                IDL = new SessionData( Context );
+                break;
+            case 'X':
+                IDL = new SesCacheData( Context );
+                break;
+            case 'C':
+                IDL = new CacheData( Context );
+                break;
+            default:    // if name isn't standard, set it 
+                IDL = new PageData( Context );
+                break;
+            }
+        }
+        public string String( string name ) { _CreateIDL( name ); return IDL.String(name); }
+        public string String( string name, string defaultValue ) { _CreateIDL( name ); return IDL.String( name, defaultValue ); }
+        public Object Data( string name ) { _CreateIDL( name ); return IDL.Data( name ); }
+//        public Object this[string name] { get { return D[name]; } set { IDL[name] = value; } }
+        public T Data<T>( string name ) where T : new() { _CreateIDL( name ); return Data<T>( name ); }
+        public IDataObj DataObj( string name ) { _CreateIDL( name ); return (IDataObj) IDL.DataObj( name ); }
+
+        #region Static Members
+        public static string GetString( HttpContext context, string name ) { return new NamedData(context).String(name); }
+        public static string GetString( HttpContext context, string name, string defaultValue ) { return new NamedData( context ).String( name, defaultValue ); }
+        public static Object GetData( HttpContext context, string name ) { return new NamedData( context ).Data( name ); }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() { return new NamedData( context ).Data<T>( name ); }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return new NamedData( context ).DataObj ( name ); }
+        #endregion
+    }
+
+
+    public class FilesCacheDependency : CacheDependency {
+        public FilesCacheDependency( string filename ) : base(filename) {}
+        public FilesCacheDependency( string[] filenames ) : base( filenames ) { }
+        public FilesCacheDependency( string filename, DateTime start ) : base( filename, start ) { }
+        public FilesCacheDependency( string[] filenames, DateTime start ) : base( filenames, start ) { }
+    }
+
+    public class KeyCacheDependency : CacheDependency {
+        public KeyCacheDependency ( string key ) : base( null, new string[] { key } ) { }
+        public KeyCacheDependency ( string[] keys ) : base(null, keys ) { }
+    }
+
+    public class DependencyTree {
+        Dictionary<string, AggregateCacheDependency> agg = new Dictionary<string, AggregateCacheDependency>();
+        public void AddDependency(int ID) {
+            AggregateCacheDependency a = new AggregateCacheDependency();
+        }
+        public void Expire( int ID ) { }
+        // CacheExpire - File, Date
+    }
+
+
+    public enum DataLayerScope {
+        SCOPE_PAGE = 0, 
+        SCOPE_SESSION = 1,
+        SCOPE_CACHE = 2
+    }
+    public class DataLayerKeyConfig {
+        public DataLayerKeyConfig( ) { }
+        public DataLayerKeyConfig( DataLayerScope scope ) { Scope = scope; }
+        public DataLayerKeyConfig( bool keyBySession, int expireMins, bool slide, AggregateCacheDependency agg) { 
+            // Initialize for Cache Scoped object
+            Scope = DataLayerScope.SCOPE_CACHE;
+            KeyBySession = keyBySession;
+            ExpireMins = expireMins;
+            Slide = slide;
+            Depends = agg;
+        }
+        public DataLayerScope Scope = DataLayerScope.SCOPE_PAGE;
+        public bool KeyBySession = false;
+        public int ExpireMins = 0;
+        public bool Slide = false;
+        public AggregateCacheDependency Depends = new AggregateCacheDependency();
+    }
+
+
+#if CONFIG
+	public class DataLayer : IDLData {
+        public const string KEYSCACHE = "$wcDLSection";
+        protected HttpContext Context = null;
+        Dictionary<string, DataLayerKeyConfig> Keys = null;
+
+        public DataLayer(HttpContext context) {
+            Context = context;
+            // Check if the keys are in cache memory
+            if(Keys==null)
+                Keys = (Dictionary<string, DataLayerKeyConfig>) Context.Cache[KEYSCACHE];
+            if( Keys == null ) {
+                // If not, Initialize the DataLayer by loading frmo web.config
+                DataLayerSection section = ConfigurationManager.GetSection( "DataLayerSection" ) as DataLayerSection;
+                DataLayerCollection data = section.DataLayer;
+                int len = data.Count;
+                Keys = new Dictionary<string, DataLayerKeyConfig>( len );
+                for( int i = 0; i < len; i++ ) {
+                    var d = data[i];
+                    DataLayerKeyConfig newKey = null;
+                    switch( d.Scope ) {
+                    case "Page":
+                        newKey = new DataLayerKeyConfig();  // Page is default
+                        break;
+                    case "Session":
+                        newKey = new DataLayerKeyConfig( DataLayerScope.SCOPE_SESSION );
+                        break;
+                    case "Cache":
+                        int lend = d.Dependency.Count;
+                        CacheDependency [] deps = null;
+                        AggregateCacheDependency agg = null;
+                        if( lend > 0 ) {
+                            deps = new CacheDependency[lend];
+                            for( int j = 0; j < lend; j++ ) {
+                                DependencyElement de = d.Dependency[j];
+                                switch(de.Type) {
+                                case "Key":
+                                    deps[j] = new KeyCacheDependency( de.Name );
+                                    break;
+                                case "File":
+                                    //!! Would it be better to pass a set of files all at once?
+                                    deps[j] = new FilesCacheDependency( Context.Server.MapPath(de.Name) );
+                                    break;
+                                case "SQL":
+                                    deps[j] = new SqlCacheDependency(de.DB, de.Name);//!! verify this
+                                    break;
+                                default:
+                                    throw new ArgumentException( "Invalid Type found in DataLayerSection Dependency of web.config" );
+                                }
+                            }
+                            agg = new AggregateCacheDependency();
+                            agg.Add(deps);
+                        }
+                        newKey = new DataLayerKeyConfig( d.KeyBySession, d.ExpireMins, d.Slide, agg );
+                        break;
+                    default:
+                        throw new ArgumentException( "Invalid Scope found in DataLayerSection of web.config" );
+                    }
+
+                    Keys.Add( d.ID, newKey );
+                }
+            }
+        }
+
+        public static DataLayer Get( HttpContext context ) { return new DataLayer( context ); }
+
+        protected IDLData _CreateIDL(string name) {
+            if(Keys==null)
+                throw new ArgumentException("DataLayer.CreateIDL: Keys should be initialized.");
+            // Look to see if key is already defined; if not create the default DataLayer type
+            DataLayerKeyConfig key = Keys[name];
+            if(key==null) {
+                return new PageData(Context);
+            }
+            // Onvoke appropriate object based on scope type
+            switch( key.Scope ) {
+            case DataLayerScope.SCOPE_CACHE:
+                var IDL = new CacheData( Context );
+                IDL.Dependencies = key.Depends;
+                if( key.KeyBySession ) {
+                    // KeyedBySession is automatically set to session's timeout
+                    if( key.ExpireMins == 0 )
+                        IDL.SlidingExpiration = new TimeSpan( 0, Context.Session.Timeout, 0 ); // default session expiration mins
+                    name += Context.Session.SessionID;
+                } else {
+                    if( key.ExpireMins != 0 )
+                        if( !key.Slide )
+                            IDL.AbsoluteExpiration = DateTime.Now.AddMinutes( key.ExpireMins );
+                        else
+                            IDL.SlidingExpiration = new TimeSpan( 0, key.ExpireMins, 0 ); // default session expiration mins
+                }
+                break;
+            case DataLayerScope.SCOPE_SESSION:
+                return new SessionData( Context );
+            default:
+                return new PageData( Context );
+            }
+            return null;
+        }
+        public string String( string name ) { return _CreateIDL( name ).String(name); }
+        public string String( string name, string defaultValue ) { return _CreateIDL( name ).String( name, defaultValue ); }
+        public Object Data( string name ) { return _CreateIDL( name ).Data( name ); }
+        public T Data<T>( string name ) where T : new() { return _CreateIDL( name ).Data<T>( name ); }
+        public Object this[string name] { get { return _CreateIDL(name).Data(name); } set { ; } }
+        public IDataObj DataObj(string name) { return _CreateIDL(name).DataObj(name); }
+
+        #region Static Members
+        public static string GetString( HttpContext context, string name ) { return new DataLayer(context).String(name); }
+        public static string GetString( HttpContext context, string name, string defaultValue ) { return new DataLayer( context ).String( name, defaultValue ); }
+        public static Object GetData( HttpContext context, string name ) { return new DataLayer( context ).Data( name ); }
+        public static T GetData<T>( HttpContext context, string name ) where T : new() { return new DataLayer( context ).Data<T>( name ); }
+        public static IDataObj GetDataObj( HttpContext context, string name ) { return new DataLayer( context ).DataObj( name ); }
+        #endregion
+    }
+#endif
+
+}
